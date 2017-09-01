@@ -7,6 +7,7 @@ const DEFAULT_INCLUDE = /\.js$|\.map$/
 const DEFAULT_TRANSFORM = filename => `~/${filename}`
 const DEFAULT_DELETE_REGEX = /\.map$/
 const DEFAULT_BODY_TRANSFORM = version => ({ version })
+const DEFAULT_OVERWRITE = false
 
 module.exports = class SentryPlugin {
   constructor(options) {
@@ -24,6 +25,7 @@ module.exports = class SentryPlugin {
     this.filenameTransform = options.filenameTransform || DEFAULT_TRANSFORM
     this.suppressErrors = options.suppressErrors
     this.suppressConflictError = options.suppressConflictError
+    this.shouldOverwrite = options.shouldOverwrite || DEFAULT_OVERWRITE
 
     this.deleteAfterCompile = options.deleteAfterCompile
     this.deleteRegex = options.deleteRegex || DEFAULT_DELETE_REGEX
@@ -45,6 +47,13 @@ module.exports = class SentryPlugin {
 
       if (typeof this.releaseBody === 'function') {
         this.releaseBody = this.releaseBody(this.releaseVersion)
+      }
+
+      if (this.shouldOverwrite) {
+        console.log('about to overwrite', this.shouldOverwrite)
+        this.getReleaseArtifacts(this.releaseVersion)
+          .then(resp => this.deleteArtifacts(resp))
+          .catch(err => this.handleErrors(err, compilation, cb))
       }
 
       return this.createRelease()
@@ -116,12 +125,12 @@ module.exports = class SentryPlugin {
       url: `${this.sentryReleaseUrl()}/`,
       method: 'POST',
       auth: {
-        bearer: this.apiKey,
+        bearer: this.apiKey
       },
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(this.releaseBody),
+      body: JSON.stringify(this.releaseBody)
     })
   }
 
@@ -134,12 +143,12 @@ module.exports = class SentryPlugin {
       url: `${this.sentryReleaseUrl()}/${this.releaseVersion}/files/`,
       method: 'POST',
       auth: {
-        bearer: this.apiKey,
+        bearer: this.apiKey
       },
       formData: {
         file: fs.createReadStream(path),
-        name: this.filenameTransform(name),
-      },
+        name: this.filenameTransform(name)
+      }
     })
   }
 
@@ -154,5 +163,30 @@ module.exports = class SentryPlugin {
         const { existsAt } = stats.compilation.assets[name]
         fs.unlinkSync(existsAt)
       })
+  }
+
+  getReleaseArtifacts(version) {
+    return request({
+      url: `${this.sentryReleaseUrl()}/${version}/files/`,
+      method: 'GET',
+      auth: {
+        bearer: this.apiKey
+      }
+    })
+  }
+
+  deleteArtifacts(resp) {
+    console.log('Response from getReleaseArtifacts', resp)
+    resp.forEach((artifact) => {
+      const artifactID = artifact.id
+      return request({
+        url: `${this.sentryReleaseUrl()}/${this.releaseVersion}
+          /files/${artifactID}`,
+        method: 'DELETE',
+        auth: {
+          bearer: this.apiKey
+        }
+      })
+    })
   }
 }
