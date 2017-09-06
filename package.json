@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "start": "nps",
+    "build": "nps build",
     "test": "nps test",
     "prepublish": "nps prepublish",
     "precommit": "opt --in pre-commit --exec \"nps format lint\"",

@@ -185,7 +185,6 @@ module.exports = class SentryPlugin {
     })
   }
 
-
   deleteArtifact(artifactID) {
     return request({
       url: `${this.sentryReleaseUrl()}/${this.releaseVersion}
