@@ -177,12 +177,10 @@ module.exports = class SentryPlugin {
 
   deleteArtifacts(resp) {
     console.log('Response from getReleaseArtifacts', resp)
-    resp.forEach((artifact) => {
-      const artifactID = artifact.id
-      console.log('About to delete artifact ID:', artifactID)
-      const deleted = this.deleteArtifact(artifactID)
-      console.log('Response from delete:', deleted)
-    })
+    resp
+      .map(obj => obj.id)
+      console.log("RESP: ", resp);
+      // .forEach(id => this.deleteArtifact(id))
   }
 
   deleteArtifact(artifactID) {
