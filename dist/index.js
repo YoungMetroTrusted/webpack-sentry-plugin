@@ -73,7 +73,6 @@ module.exports = function () {
         }
 
         if (_this.shouldOverwrite) {
-          console.log('about to overwrite', _this.shouldOverwrite);
           _this.getReleaseArtifacts(_this.releaseVersion).then(function (resp) {
             return _this.deleteArtifacts(resp);
           }).catch(function (err) {
