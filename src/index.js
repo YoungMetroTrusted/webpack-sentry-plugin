@@ -49,13 +49,9 @@ module.exports = class SentryPlugin {
         this.releaseBody = this.releaseBody(this.releaseVersion)
       }
 
-      if (this.shouldOverwrite) {
-        this.getReleaseArtifacts(this.releaseVersion)
-          .then(resp => this.deleteArtifacts(resp))
-          .catch(err => this.handleErrors(err, compilation, cb))
-      }
-
-      return this.createRelease()
+      return this.getReleaseArtifacts(this.releaseVersion)
+        .then(resp => this.deleteArtifacts(resp))
+        .then(() => this.createRelease())
         .then(() => this.uploadFiles(files))
         .then(() => cb())
         .catch(err => this.handleErrors(err, compilation, cb))
@@ -175,13 +171,15 @@ module.exports = class SentryPlugin {
   }
 
   deleteArtifacts(response) {
-    const resp = JSON.parse(response)
-    resp.forEach((artifact) => {
-      const artifactID = artifact.id
-      if (artifactID) {
-        this.deleteArtifact(artifactID)
-      }
-    })
+    if (this.shouldOverwrite) {
+      const resp = JSON.parse(response)
+      resp.forEach((artifact) => {
+        const artifactID = artifact.id
+        if (artifactID) {
+          this.deleteArtifact(artifactID)
+        }
+      })
+    }
   }
 
   deleteArtifact(id) {
