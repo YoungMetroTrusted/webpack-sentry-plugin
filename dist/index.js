@@ -72,15 +72,11 @@ module.exports = function () {
           _this.releaseBody = _this.releaseBody(_this.releaseVersion);
         }
 
-        if (_this.shouldOverwrite) {
-          _this.getReleaseArtifacts(_this.releaseVersion).then(function (resp) {
-            return _this.deleteArtifacts(resp);
-          }).catch(function (err) {
-            return _this.handleErrors(err, compilation, cb);
-          });
-        }
-
-        return _this.createRelease().then(function () {
+        return _this.getReleaseArtifacts(_this.releaseVersion).then(function (resp) {
+          return _this.deleteArtifacts(resp);
+        }).then(function () {
+          return _this.createRelease();
+        }).then(function () {
           return _this.uploadFiles(files);
         }).then(function () {
           return cb();
@@ -216,13 +212,15 @@ module.exports = function () {
     value: function deleteArtifacts(response) {
       var _this4 = this;
 
-      var resp = JSON.parse(response);
-      resp.forEach(function (artifact) {
-        var artifactID = artifact.id;
-        if (artifactID) {
-          _this4.deleteArtifact(artifactID);
-        }
-      });
+      if (this.shouldOverwrite) {
+        var resp = JSON.parse(response);
+        resp.forEach(function (artifact) {
+          var artifactID = artifact.id;
+          if (artifactID) {
+            _this4.deleteArtifact(artifactID);
+          }
+        });
+      }
     }
   }, {
     key: 'deleteArtifact',
