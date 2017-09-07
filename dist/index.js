@@ -214,22 +214,22 @@ module.exports = function () {
     }
   }, {
     key: 'deleteArtifacts',
-    value: function deleteArtifacts(resp) {
+    value: function deleteArtifacts(response) {
       var _this4 = this;
 
-      console.log('Response from getReleaseArtifacts', resp);
+      var resp = JSON.parse(response);
       resp.forEach(function (artifact) {
         var artifactID = artifact.id;
-        console.log('About to delete artifact ID:', artifactID);
-        var deleted = _this4.deleteArtifact(artifactID);
-        console.log('Response from delete:', deleted);
+        if (artifactID) {
+          _this4.deleteArtifact(artifactID);
+        }
       });
     }
   }, {
     key: 'deleteArtifact',
-    value: function deleteArtifact(artifactID) {
+    value: function deleteArtifact(id) {
       return (0, _requestPromise2.default)({
-        url: this.sentryReleaseUrl() + '/' + this.releaseVersion + '\n        /files/' + artifactID,
+        url: this.sentryReleaseUrl() + '/' + this.releaseVersion + '/files/' + id + '/',
         method: 'DELETE',
         auth: {
           bearer: this.apiKey

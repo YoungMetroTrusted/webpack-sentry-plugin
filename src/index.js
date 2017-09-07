@@ -175,18 +175,19 @@ module.exports = class SentryPlugin {
     })
   }
 
-  deleteArtifacts(resp) {
-    console.log('Response from getReleaseArtifacts', resp)
-    resp
-      .map(obj => obj.id)
-      console.log("RESP: ", resp);
-      // .forEach(id => this.deleteArtifact(id))
+  deleteArtifacts(response) {
+    const resp = JSON.parse(response)
+    resp.forEach((artifact) => {
+      const artifactID = artifact.id
+      if (artifactID) {
+        this.deleteArtifact(artifactID)
+      }
+    })
   }
 
-  deleteArtifact(artifactID) {
+  deleteArtifact(id) {
     return request({
-      url: `${this.sentryReleaseUrl()}/${this.releaseVersion}
-        /files/${artifactID}`,
+      url: `${this.sentryReleaseUrl()}/${this.releaseVersion}/files/${id}/`,
       method: 'DELETE',
       auth: {
         bearer: this.apiKey
