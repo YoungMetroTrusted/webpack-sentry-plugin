@@ -50,7 +50,6 @@ module.exports = class SentryPlugin {
       }
 
       if (this.shouldOverwrite) {
-        console.log('about to overwrite', this.shouldOverwrite)
         this.getReleaseArtifacts(this.releaseVersion)
           .then(resp => this.deleteArtifacts(resp))
           .catch(err => this.handleErrors(err, compilation, cb))
