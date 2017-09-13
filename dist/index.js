@@ -14,15 +14,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var BASE_SENTRY_URL = 'https://sentry.io/api/0/projects';
+var BASE_SENTRY_URL = 'https://sentry.io/api/0';
 
 var DEFAULT_INCLUDE = /\.js$|\.map$/;
 var DEFAULT_TRANSFORM = function DEFAULT_TRANSFORM(filename) {
   return '~/' + filename;
 };
 var DEFAULT_DELETE_REGEX = /\.map$/;
-var DEFAULT_BODY_TRANSFORM = function DEFAULT_BODY_TRANSFORM(version) {
-  return { version: version };
+var DEFAULT_BODY_TRANSFORM = function DEFAULT_BODY_TRANSFORM(version, projects) {
+  return { version: version, projects: projects };
 };
 var DEFAULT_OVERWRITE = false;
 
@@ -30,9 +30,27 @@ module.exports = function () {
   function SentryPlugin(options) {
     _classCallCheck(this, SentryPlugin);
 
-    this.baseSentryURL = options.baseSentryURL || BASE_SENTRY_URL;
+    // The baseSentryURL option was previously documented to have
+    // `/projects` on the end. We now expect the basic API endpoint
+    // but remove any `/projects` suffix for backwards compatibility.
+    var projectsRegex = /\/projects$/;
+    if (options.baseSentryURL) {
+      if (projectsRegex.test(options.baseSentryURL)) {
+        // eslint-disable-next-line no-console
+        console.warn("baseSentryURL with '/projects' suffix is deprecated; " + 'see https://github.com/40thieves/webpack-sentry-plugin/issues/38');
+        this.baseSentryURL = options.baseSentryURL.replace(projectsRegex, '');
+      } else {
+        this.baseSentryURL = options.baseSentryURL;
+      }
+    } else {
+      this.baseSentryURL = BASE_SENTRY_URL;
+    }
+
     this.organizationSlug = options.organization || options.organisation;
     this.projectSlug = options.project;
+    if (typeof this.projectSlug === 'string') {
+      this.projectSlug = [this.projectSlug];
+    }
     this.apiKey = options.apiKey;
 
     this.releaseBody = options.releaseBody || DEFAULT_BODY_TRANSFORM;
@@ -69,7 +87,7 @@ module.exports = function () {
         }
 
         if (typeof _this.releaseBody === 'function') {
-          _this.releaseBody = _this.releaseBody(_this.releaseVersion);
+          _this.releaseBody = _this.releaseBody(_this.releaseVersion, _this.projectSlug);
         }
 
         return _this.createRelease().then(function () {
@@ -181,7 +199,7 @@ module.exports = function () {
   }, {
     key: 'sentryReleaseUrl',
     value: function sentryReleaseUrl() {
-      return this.baseSentryURL + '/' + this.organizationSlug + '/' + this.projectSlug + '/releases'; // eslint-disable-line max-len
+      return this.baseSentryURL + '/organizations/' + this.organizationSlug + '/releases'; // eslint-disable-line max-len
     }
   }, {
     key: 'deleteFiles',
