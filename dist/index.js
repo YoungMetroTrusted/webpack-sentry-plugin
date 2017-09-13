@@ -72,10 +72,10 @@ module.exports = function () {
           _this.releaseBody = _this.releaseBody(_this.releaseVersion);
         }
 
-        return _this.getReleaseArtifacts(_this.releaseVersion).then(function (resp) {
+        return _this.createRelease().then(function () {
+          return _this.getReleaseArtifacts(_this.releaseVersion);
+        }).then(function (resp) {
           return _this.deleteArtifacts(resp);
-        }).then(function () {
-          return _this.createRelease();
         }).then(function () {
           return _this.uploadFiles(files);
         }).then(function () {

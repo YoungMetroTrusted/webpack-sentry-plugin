@@ -49,9 +49,9 @@ module.exports = class SentryPlugin {
         this.releaseBody = this.releaseBody(this.releaseVersion)
       }
 
-      return this.getReleaseArtifacts(this.releaseVersion)
+      return this.createRelease()
+        .then(() => this.getReleaseArtifacts(this.releaseVersion))
         .then(resp => this.deleteArtifacts(resp))
-        .then(() => this.createRelease())
         .then(() => this.uploadFiles(files))
         .then(() => cb())
         .catch(err => this.handleErrors(err, compilation, cb))
